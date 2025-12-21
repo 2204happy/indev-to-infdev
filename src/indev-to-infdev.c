@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <string.h>
+#include <nbt.h>
 
 struct IndevWorldSize {
     int x;
@@ -80,75 +81,49 @@ void buildChunkBlockArray(char* out, char* blocks, struct ChunkPos chunkPos, str
     }
 }
 
-int flipIntEndian(int n) {
-    return (n&0x000000ff)<<24|(n&0x0000ff00)<<8|(n&0x00ff0000)>>8|(n&0xff000000)>>24;
-}
-
 void makeChunk(char* worldName, char* blocks, struct ChunkPos chunkPos, struct IndevWorldSize worldSize) {
+    const int chunkBlockCount = 16*16*128;
+    
     char filePath[64] = "";
     getChunkFilePath(chunkPos,worldName,filePath);
     
+    int bufferSize = 1024*1024;
+    char* buffer = malloc(bufferSize);
     
-    char header[] = "\x0a\x00\x00\x0a\x00\x05Level\x03\x00\x04xPos";
-    char middle5[] = "\x03\x00\x04zPos";
-    char middle6[] = "\x07\x00\x06""Blocks\x00\x00\x80\x00";
-    char middle1[] = "\x04\x00\x0aLastUpdate\x00\x00\x00\x00\x00\x00\x00\x00\x07\x00\x04""Data\x00\x00\x40\x00";
-    char middle2[] = "\x07\x00\x0a""BlockLight\x00\x00\x40\x00";
-    char middle3[] = "\x07\x00\x08SkyLight\x00\x00\x40\x00";
-    char middle4[] = "\x07\x00\x09HeightMap\x00\x00\x01\x00";
-    char footer[] = "\x00\x00";
-    int bufferSize = 32768+3*16384+256+2*4+sizeof(header)+sizeof(middle1)+sizeof(middle2)+sizeof(middle3)+sizeof(middle4)+sizeof(middle5)+sizeof(middle6)+sizeof(footer)-8;
-    char* outBuffer = malloc(bufferSize);
-    char* bufferPtr = outBuffer;
+    int chunkSize = 0;
     
-    memcpy(bufferPtr,header,sizeof(header)-1);
-    bufferPtr+=sizeof(header)-1;
-    
-    int xPosBE = flipIntEndian(chunkPos.x);
-    memcpy(bufferPtr,&xPosBE,4);
-    bufferPtr+=4;
-    
-    memcpy(bufferPtr,middle5,sizeof(middle5)-1);
-    bufferPtr+=sizeof(middle5)-1;
-    
-    int zPosBE = flipIntEndian(chunkPos.z);
-    memcpy(bufferPtr,&zPosBE,4);
-    bufferPtr+=4;
-    
-    memcpy(bufferPtr,middle6,sizeof(middle6)-1);
-    bufferPtr+=sizeof(middle6)-1;
-    
-    buildChunkBlockArray(bufferPtr,blocks,chunkPos,worldSize);
-    bufferPtr+=32768;
-    
-    memcpy(bufferPtr,middle1,sizeof(middle1)-1);
-    bufferPtr+=sizeof(middle1)-1;
-    memset(bufferPtr,0,16384);
-    bufferPtr+=16384;
-    
-    memcpy(bufferPtr,middle2,sizeof(middle2)-1);
-    bufferPtr+=sizeof(middle2)-1;
-    memset(bufferPtr,0,16384);
-    bufferPtr+=16384;
-    
-    memcpy(bufferPtr,middle3,sizeof(middle3)-1);
-    bufferPtr+=sizeof(middle3)-1;
-    memset(bufferPtr,0,16384);
-    bufferPtr+=16384;
-    
-    memcpy(bufferPtr,middle4,sizeof(middle4)-1);
-    bufferPtr+=sizeof(middle4)-1;
-    memset(bufferPtr,32,256);
-    bufferPtr+=256;
+    chunkSize+=makeNBTCompoundEntry(buffer,"",false);
+    chunkSize+=makeNBTCompoundEntry(buffer+chunkSize,"Level",false);
+    chunkSize+=makeNBTIntEntry(buffer+chunkSize,"xPos",chunkPos.x,false);
+    chunkSize+=makeNBTIntEntry(buffer+chunkSize,"zPos",chunkPos.z,false);
+    chunkSize+=makeNBTLongEntry(buffer+chunkSize,"LastUpdate",0,false);
     
     
-    memcpy(bufferPtr,footer,sizeof(footer)-1);
+    char* workingArray = malloc(chunkBlockCount);
+    buildChunkBlockArray(workingArray,blocks,chunkPos,worldSize);
+    
+    chunkSize+=makeNBTByteArrayEntry(buffer+chunkSize,"Blocks",workingArray,chunkBlockCount,false);
+    
+    memset(workingArray,0,chunkBlockCount);
+    
+    chunkSize+=makeNBTByteArrayEntry(buffer+chunkSize,"BlockLight",workingArray,chunkBlockCount/2,false);
+    chunkSize+=makeNBTByteArrayEntry(buffer+chunkSize,"SkyLight",workingArray,chunkBlockCount/2,false);
+    chunkSize+=makeNBTByteArrayEntry(buffer+chunkSize,"HeightMap",workingArray,256,false);
+        
+    
+    free(workingArray);
+    
+    chunkSize+=makeNBTListEntry(buffer+chunkSize,"Entities",0,COMPOUND,false);
+    chunkSize+=makeNBTListEntry(buffer+chunkSize,"TileEntities",0,COMPOUND,false);
+    
+    chunkSize+=makeNBTEndEntry(buffer+chunkSize);
+    chunkSize+=makeNBTEndEntry(buffer+chunkSize);
     
     
     gzFile f = gzopen(filePath,"wb");
-    gzwrite(f,outBuffer,bufferSize);
+    gzwrite(f,buffer,chunkSize);
     gzclose(f);
-    free(outBuffer);
+    free(buffer);
 }
 
 int main() {
