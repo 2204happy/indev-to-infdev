@@ -1,6 +1,6 @@
 To compile the program run:
 
-gcc indev-to-infdev.c -lz
+gcc src/* -I include/ -lz
 
 and run:
 
