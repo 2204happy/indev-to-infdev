@@ -96,7 +96,7 @@ void makeChunk(char* worldName, char* blocks, struct ChunkPos chunkPos, struct I
     chunkSize+=makeNBTCompoundEntry(buffer+chunkSize,"Level",false);
     chunkSize+=makeNBTIntEntry(buffer+chunkSize,"xPos",chunkPos.x,false);
     chunkSize+=makeNBTIntEntry(buffer+chunkSize,"zPos",chunkPos.z,false);
-    chunkSize+=makeNBTLongEntry(buffer+chunkSize,"LastUpdate",0,false);
+    //chunkSize+=makeNBTLongEntry(buffer+chunkSize,"LastUpdate",0,false);
     
     
     char* workingArray = malloc(chunkBlockCount);
@@ -106,8 +106,12 @@ void makeChunk(char* worldName, char* blocks, struct ChunkPos chunkPos, struct I
     
     memset(workingArray,0,chunkBlockCount);
     
+    chunkSize+=makeNBTByteArrayEntry(buffer+chunkSize,"Data",workingArray,chunkBlockCount/2,false);
     chunkSize+=makeNBTByteArrayEntry(buffer+chunkSize,"BlockLight",workingArray,chunkBlockCount/2,false);
     chunkSize+=makeNBTByteArrayEntry(buffer+chunkSize,"SkyLight",workingArray,chunkBlockCount/2,false);
+    
+    memset(workingArray,32,256);
+    
     chunkSize+=makeNBTByteArrayEntry(buffer+chunkSize,"HeightMap",workingArray,256,false);
         
     
@@ -131,8 +135,13 @@ int main() {
     gzFile f = gzopen("test.mclevel","rb");
     gzread(f,buffer,8407005);
     gzclose(f);
+    char* MinecraftLevel = findNBTEntry(buffer,COMPOUND,"MinecraftLevel");
+    char* Map = findNBTEntry(MinecraftLevel,COMPOUND,"Map");
+    char* Blocks = findNBTEntry(Map,BYTE_ARRAY,"Blocks");
     
-    char* blocks = buffer+0xf9;
+    printf("%x",blocks-buffer);
+    return 0;
+
     
     mkdirIfNotExists("World1");
     struct IndevWorldSize worldSize;

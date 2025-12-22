@@ -16,7 +16,7 @@ enum nbtType {
     LONG_ARRAY = 12
 }; 
 
-int makeNBTHeader(char* buffer, enum nbtType type,char* name, int size, enum nbtType listType, bool inList);
+int makeNBTHeader(char* buffer, enum nbtType type,char* name, int size, enum nbtType listType, bool inList,bool nameOnly);
 
 int makeNBTEndEntry(char* buffer);
 
@@ -43,3 +43,9 @@ int makeNBTCompoundEntry(char* buffer,char* name,bool inList);
 int makeNBTIntArrayEntry(char* buffer,char* name,int* payload,int plSize, bool inList);
 
 int makeNBTLongArrayEntry(char* buffer,char* name,long int* payload,int plSize, bool inList);
+
+char* skipNBTCompoundEntry(char* nbtData);
+
+char* getNextNBTEntry(char* nbtData,bool inList,enum nbtType listType);
+
+char* findNBTEntry(char* nbtData,enum nbtType type,char* name);
