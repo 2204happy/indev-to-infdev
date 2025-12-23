@@ -1,22 +1,5 @@
 #include <stdbool.h>
-
-enum nbtType {
-    END = 0,
-    BYTE = 1,
-    SHORT = 2,
-    INT = 3,
-    LONG = 4,
-    FLOAT = 5,
-    DOUBLE = 6,
-    BYTE_ARRAY = 7,
-    STRING = 8,
-    LIST = 9,
-    COMPOUND = 10,
-    INT_ARRAY = 11,
-    LONG_ARRAY = 12
-}; 
-
-int makeNBTHeader(char* buffer, enum nbtType type,char* name, int size, enum nbtType listType, bool inList,bool nameOnly);
+#include <util.h>
 
 int makeNBTEndEntry(char* buffer);
 
@@ -43,6 +26,8 @@ int makeNBTCompoundEntry(char* buffer,char* name,bool inList);
 int makeNBTIntArrayEntry(char* buffer,char* name,int* payload,int plSize, bool inList);
 
 int makeNBTLongArrayEntry(char* buffer,char* name,long int* payload,int plSize, bool inList);
+
+char* skipNBTListEntry(char* nbtData);
 
 char* skipNBTCompoundEntry(char* nbtData);
 

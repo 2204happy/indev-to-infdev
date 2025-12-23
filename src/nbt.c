@@ -1,7 +1,8 @@
-#include <nbt.h>
-#include <endian.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include <util.h>
+#include <nbt.h>
 
 int makeNBTHeader(char* buffer, enum nbtType type,char* name, int size, enum nbtType listType, bool inList, bool nameOnly) {
     int headerLen = 0;

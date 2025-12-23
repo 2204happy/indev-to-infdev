@@ -1,3 +1,31 @@
+#include <sys/stat.h>
+#include <stdio.h>
+#include <util.h>
+
+char* getb36(char* buffer, int n) {
+    char* working = buffer;
+    char digits[36] = "0123456789abcdefghijklmnopqrstuvwxyz";
+    if(n>=36) {
+        *working = digits[n/36];
+        working++;
+    }
+    *working = digits[n%36];
+    return buffer;
+    
+}
+
+bool dirExists(char* dir) {
+    struct stat s;
+    return stat(dir,&s) == 0;
+}
+
+void mkdirIfNotExists(char* dir) {
+    if (!dirExists(dir)) {
+        mkdir(dir,0755);
+    }
+}
+
+
 int flipIntEndian(int n) {
     return (n&0x000000ff)<<24|
            (n&0x0000ff00)<<8|
