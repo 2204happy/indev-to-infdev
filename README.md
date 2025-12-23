@@ -1,9 +1,9 @@
 To compile the program run:
 
-gcc src/* -I include/ -lz
+`make`
 
 and run:
 
-./a.out
+`./indev-to-infdev`
 
-Will add a proper Makefile later when the program gets bigger and I separate out the functionality into multiple files
+Currently the indev level must be named test.mclevel and be in the working directory
