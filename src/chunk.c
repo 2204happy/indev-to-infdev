@@ -28,8 +28,10 @@ void buildChunkArrays(char* inputBlockArray,char* inputDataArray, struct ChunkPo
     while (x<16) {
         int z = 0;
         while(z<16) {
-            int y = 0;
-            while(y<128) {
+            int y = 127;
+            int heightMapIndex = z+x*16;
+            *(heightMap+heightMapIndex)=-1;
+            while(y>=0) {
                 char block;
                 char inputDataValue;
                 if (y<worldSize.y) {
@@ -41,14 +43,19 @@ void buildChunkArrays(char* inputBlockArray,char* inputDataArray, struct ChunkPo
                     block = 0;
                     inputDataValue = 0x0f;
                 }
-                if(block!=0) {
-                    int heightMapIndex = z+x*16;
+                if(block!=0 && *(heightMap+heightMapIndex)==-1) {
                     *(heightMap+heightMapIndex) = y;
                 }
                 int infdevIndex = y+(z*128+(x*128*16));
                 *(blockArray+infdevIndex) = block;
                 char dataValue = (inputDataValue&0xf0)>>4;
-                char skyLightValue = inputDataValue&0x0f;
+                char skyLightValue;
+                if(*(heightMap+heightMapIndex)==-1 || *(heightMap+heightMapIndex)==y) {
+                    skyLightValue = 0x0f;
+                }
+                else {
+                     skyLightValue = inputDataValue&0x0f;
+                }
                 int dataLightArrayIndex = infdevIndex>>1;
                 if(infdevIndex%2==0) {
                     *(dataArray+dataLightArrayIndex) = dataValue<<4;
@@ -58,7 +65,7 @@ void buildChunkArrays(char* inputBlockArray,char* inputDataArray, struct ChunkPo
                     *(dataArray+dataLightArrayIndex) += dataValue;
                     *(skyLightArray+dataLightArrayIndex) += skyLightValue;                    
                 }
-                y+=1;
+                y-=1;
             }
             z+=1;
         }
