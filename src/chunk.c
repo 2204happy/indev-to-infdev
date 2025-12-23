@@ -23,7 +23,7 @@ void getChunkFilePath(struct ChunkPos chunkPos, char* worldName,char* filePathBu
     sprintf(filePathBuffer,"%s/%s/%s/c.%s.%s.dat",worldName,dirName1,dirName2,getb36(xpos,chunkPos.x),getb36(zpos,chunkPos.z));
 }
 
-void buildChunkBlockArray(char* inputBlockArray,char* inputDataArray, struct ChunkPos chunkPos, struct IndevWorldSize worldSize,char* blockArray,char* dataArray,char* skyLightArray, char* heightMap) {
+void buildChunkArrays(char* inputBlockArray,char* inputDataArray, struct ChunkPos chunkPos, struct IndevWorldSize worldSize,char* blockArray,char* dataArray,char* skyLightArray, char* heightMap) {
     int x = 0;
     while (x<16) {
         int z = 0;
@@ -66,22 +66,16 @@ void buildChunkBlockArray(char* inputBlockArray,char* inputDataArray, struct Chu
     }
 }
 
-void makeChunk(char* worldName, char* inputBlockArray,char* inputDataArray, struct ChunkPos chunkPos, struct IndevWorldSize worldSize) {
+int makeChunk(char* buffer,char* inputBlockArray,char* inputDataArray, struct ChunkPos chunkPos, struct IndevWorldSize worldSize) {
     const int chunkBlockCount = 16*16*128;
     
-    char filePath[64] = "";
-    getChunkFilePath(chunkPos,worldName,filePath);
+    char* bufferStart = buffer;
     
-    int bufferSize = 1024*1024;
-    char* buffer = malloc(bufferSize);
-    
-    int chunkSize = 0;
-    
-    chunkSize+=makeNBTCompoundEntry(buffer,"",false);
-    chunkSize+=makeNBTCompoundEntry(buffer+chunkSize,"Level",false);
-    chunkSize+=makeNBTIntEntry(buffer+chunkSize,"xPos",chunkPos.x,false);
-    chunkSize+=makeNBTIntEntry(buffer+chunkSize,"zPos",chunkPos.z,false);
-    //chunkSize+=makeNBTLongEntry(buffer+chunkSize,"LastUpdate",0,false);
+    buffer=makeNBTCompoundEntry(buffer,"",false);
+    buffer=makeNBTCompoundEntry(buffer,"Level",false);
+    buffer=makeNBTIntEntry(buffer,"xPos",chunkPos.x,false);
+    buffer=makeNBTIntEntry(buffer,"zPos",chunkPos.z,false);
+    //chunkSize+=makeNBTLongEntry(buffer,"LastUpdate",0,false);
     
     
     char blockArray[chunkBlockCount];
@@ -89,29 +83,34 @@ void makeChunk(char* worldName, char* inputBlockArray,char* inputDataArray, stru
     char skyLightArray[chunkBlockCount/2];
     char heightMap[256];
     
-    buildChunkBlockArray(inputBlockArray,inputDataArray,chunkPos,worldSize,blockArray,dataArray,skyLightArray,heightMap);
+    buildChunkArrays(inputBlockArray,inputDataArray,chunkPos,worldSize,blockArray,dataArray,skyLightArray,heightMap);
     
-    chunkSize+=makeNBTByteArrayEntry(buffer+chunkSize,"Blocks",blockArray,chunkBlockCount,false);
+    buffer=makeNBTByteArrayEntry(buffer,"Blocks",blockArray,chunkBlockCount,false);
 
     
-    chunkSize+=makeNBTByteArrayEntry(buffer+chunkSize,"Data",dataArray,chunkBlockCount/2,false);
-    chunkSize+=makeNBTByteArrayEntry(buffer+chunkSize,"SkyLight",skyLightArray,chunkBlockCount/2,false);
+    buffer=makeNBTByteArrayEntry(buffer,"Data",dataArray,chunkBlockCount/2,false);
+    buffer=makeNBTByteArrayEntry(buffer,"SkyLight",skyLightArray,chunkBlockCount/2,false);
     
     memset(skyLightArray,0,chunkBlockCount/2);
-    chunkSize+=makeNBTByteArrayEntry(buffer+chunkSize,"BlockLight",skyLightArray,chunkBlockCount/2,false);
+    buffer=makeNBTByteArrayEntry(buffer,"BlockLight",skyLightArray,chunkBlockCount/2,false);
     
-    chunkSize+=makeNBTByteArrayEntry(buffer+chunkSize,"HeightMap",heightMap,256,false);
+    buffer=makeNBTByteArrayEntry(buffer,"HeightMap",heightMap,256,false);
     
     
-    chunkSize+=makeNBTListEntry(buffer+chunkSize,"Entities",0,COMPOUND,false);
-    chunkSize+=makeNBTListEntry(buffer+chunkSize,"TileEntities",0,COMPOUND,false);
+    buffer=makeNBTListEntry(buffer,"Entities",0,COMPOUND,false);
+    buffer=makeNBTListEntry(buffer,"TileEntities",0,COMPOUND,false);
     
-    chunkSize+=makeNBTEndEntry(buffer+chunkSize);
-    chunkSize+=makeNBTEndEntry(buffer+chunkSize);
+    buffer=makeNBTEndEntry(buffer);
+    buffer=makeNBTEndEntry(buffer);
     
+    return buffer-bufferStart;
+} 
+
+void saveChunk(char* buffer, int size, char* worldName, struct ChunkPos chunkPos) {
+    char filePath[64] = "";
+    getChunkFilePath(chunkPos,worldName,filePath);
     
     gzFile f = gzopen(filePath,"wb");
-    gzwrite(f,buffer,chunkSize);
+    gzwrite(f,buffer,size);
     gzclose(f);
-    free(buffer);
-} 
+}

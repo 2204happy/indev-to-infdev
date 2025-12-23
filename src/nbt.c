@@ -4,142 +4,129 @@
 #include <util.h>
 #include <nbt.h>
 
-int makeNBTHeader(char* buffer, enum nbtType type,char* name, int size, enum nbtType listType, bool inList, bool nameOnly) {
-    int headerLen = 0;
+char* makeNBTHeader(char* buffer, enum nbtType type,char* name, int size, enum nbtType listType, bool inList, bool nameOnly) {
     if(type == END) {
         *buffer = 0;
-        headerLen++;
-        return headerLen;
+        buffer++;
+        return buffer;
     }
     
     if(!inList) {
         *buffer = (char)type;
-        headerLen++;
+        buffer++;
         int nameLen = strlen(name);
         short int nameLenBE = flipShortEndian((short int) nameLen);
-        *((short int*)(buffer+headerLen)) = nameLenBE;
-        headerLen+=2;
-        memcpy(buffer+headerLen,name,nameLen);
-        headerLen+=nameLen;
+        *((short int*)buffer) = nameLenBE;
+        buffer+=2;
+        memcpy(buffer,name,nameLen);
+        buffer+=nameLen;
     }
     if(!nameOnly) {
         if(type==LIST) {
-            *(buffer+headerLen) = (char)listType;
-            headerLen+=1;
+            *(buffer) = (char)listType;
+            buffer+=1;
         }
         if(type>=7 && type!=STRING && type!=COMPOUND) {
-            *((int*)(buffer+headerLen)) = flipIntEndian(size);
-            headerLen+=4;
+            *((int*)(buffer)) = flipIntEndian(size);
+            buffer+=4;
         }
         else if(type==STRING) {
-            *((short int*)(buffer+headerLen)) = flipShortEndian((short int)size);
-            headerLen+=2;        
+            *((short int*)(buffer)) = flipShortEndian((short int)size);
+            buffer+=2;        
         }
     }
-    return headerLen;
+    return buffer;
     
 }
 
-int makeNBTEndEntry(char* buffer) {
+char* makeNBTEndEntry(char* buffer) {
     return makeNBTHeader(buffer, END,"", 0, 0, false,false);
 }
 
-int makeNBTByteEntry(char* buffer,char* name, char payload, bool inList) {
-    int size = makeNBTHeader(buffer,BYTE,name,0,0,inList,false);
-    buffer+=size;
+char* makeNBTByteEntry(char* buffer,char* name, char payload, bool inList) {
+    buffer = makeNBTHeader(buffer,BYTE,name,0,0,inList,false);
     *(buffer) = payload;
-    size++;
-    return size;
+    buffer++;
+    return buffer;
 }
 
-int makeNBTShortEntry(char* buffer,char* name, short int payload, bool inList) {
-    int size = makeNBTHeader(buffer,SHORT,name,0,0,inList,false);
-    buffer+=size;
+char* makeNBTShortEntry(char* buffer,char* name, short int payload, bool inList) {
+    buffer = makeNBTHeader(buffer,SHORT,name,0,0,inList,false);
     *((short int*)buffer) = flipShortEndian(payload);
-    size+=2;
-    return size;
+    buffer+=2;
+    return buffer;
 }
 
-int makeNBTIntEntry(char* buffer,char* name, int payload, bool inList) {
-    int size = makeNBTHeader(buffer,INT,name,0,0,inList,false);
-    buffer+=size;
+char* makeNBTIntEntry(char* buffer,char* name, int payload, bool inList) {
+    buffer = makeNBTHeader(buffer,INT,name,0,0,inList,false);
     *((int*)buffer) = flipIntEndian(payload);
-    size+=4;
-    return size;
+    buffer+=4;
+    return buffer;
 }
 
-int makeNBTLongEntry(char* buffer,char* name, long int payload, bool inList) {
-    int size = makeNBTHeader(buffer,LONG,name,0,0,inList,false);
-    buffer+=size;
+char* makeNBTLongEntry(char* buffer,char* name, long int payload, bool inList) {
+    buffer = makeNBTHeader(buffer,LONG,name,0,0,inList,false);
     *((long int*)buffer) = flipLongEndian(payload);
-    size+=8;
-    return size;
+    buffer+=8;
+    return buffer;
 }
 
 
-int makeNBTFloatEntry(char* buffer,char* name, float payload, bool inList) {
-    int size = makeNBTHeader(buffer,FLOAT,name,0,0,inList,false);
-    buffer+=size;
+char* makeNBTFloatEntry(char* buffer,char* name, float payload, bool inList) {
+    buffer = makeNBTHeader(buffer,FLOAT,name,0,0,inList,false);
     *((int*)buffer) = flipIntEndian(*((int*)(&payload)));
-    size+=4;
-    return size;
+    buffer+=4;
+    return buffer;
 }
 
-int makeNBTDoubleEntry(char* buffer,char* name, double payload, bool inList) {
-    int size = makeNBTHeader(buffer,DOUBLE,name,0,0,inList,false);
-    buffer+=size;
+char* makeNBTDoubleEntry(char* buffer,char* name, double payload, bool inList) {
+    buffer = makeNBTHeader(buffer,DOUBLE,name,0,0,inList,false);
     *((long int*)buffer) = flipLongEndian(*((long int*)(&payload)));
-    size+=8;
-    return size;
+    buffer+=8;
+    return buffer;
 }
 
-int makeNBTByteArrayEntry(char* buffer,char* name,char* payload,int plSize, bool inList) {
-    int size = makeNBTHeader(buffer,BYTE_ARRAY,name,plSize,0,inList,false);
-    buffer+=size;
+char* makeNBTByteArrayEntry(char* buffer,char* name,char* payload,int plSize, bool inList) {
+    buffer = makeNBTHeader(buffer,BYTE_ARRAY,name,plSize,0,inList,false);
     memcpy(buffer,payload,plSize);
-    size+=plSize;
-    return size;
+    buffer+=plSize;
+    return buffer;
 }
 
-int makeNBTStringEntry(char* buffer,char* name,char* payload, bool inList) {
+char* makeNBTStringEntry(char* buffer,char* name,char* payload, bool inList) {
     int plSize = strlen(payload);
-    int size = makeNBTHeader(buffer,STRING,name,plSize,0,inList,false);
-    buffer+=size;
+    buffer = makeNBTHeader(buffer,STRING,name,plSize,0,inList,false);
     memcpy(buffer,payload,plSize);
-    size+=plSize;
-    return size;
+    buffer+=plSize;
+    return buffer;
 }
 
-int makeNBTListEntry(char* buffer,char* name, int plSize, enum nbtType listType, bool inList) {
+char* makeNBTListEntry(char* buffer,char* name, int plSize, enum nbtType listType, bool inList) {
     return makeNBTHeader(buffer,LIST,name,plSize,listType,inList,false);
 }
 
-int makeNBTCompoundEntry(char* buffer,char* name,bool inList) {
+char* makeNBTCompoundEntry(char* buffer,char* name,bool inList) {
     return makeNBTHeader(buffer,COMPOUND,name,0,0,inList,false);
 }
 
-int makeNBTIntArrayEntry(char* buffer,char* name,int* payload,int plSize, bool inList) {
-    int size = makeNBTHeader(buffer,INT_ARRAY,name,plSize,0,inList,false);
-    buffer+=size;
+char* makeNBTIntArrayEntry(char* buffer,char* name,int* payload,int plSize, bool inList) {
+    buffer = makeNBTHeader(buffer,INT_ARRAY,name,plSize,0,inList,false);
     int i = 0;
     while(i<plSize) {
         *((int*)buffer) = flipIntEndian(*payload);
         buffer+=4;
     }
-    size+=plSize*4;
-    return size;
+    return buffer;
 }
 
-int makeNBTLongArrayEntry(char* buffer,char* name,long int* payload,int plSize, bool inList) {
-    int size = makeNBTHeader(buffer,LONG_ARRAY,name,plSize,0,inList,false);
-    buffer+=size;
+char* makeNBTLongArrayEntry(char* buffer,char* name,long int* payload,int plSize, bool inList) {
+    buffer = makeNBTHeader(buffer,LONG_ARRAY,name,plSize,0,inList,false);
     int i = 0;
     while(i<plSize) {
         *((long int*)buffer) = flipIntEndian(*payload);
         buffer+=8;
     }
-    size+=plSize*8;
-    return size;
+    return buffer;
 }
 
 char* skipNBTListEntry(char* nbtData) {
@@ -225,7 +212,7 @@ char* getNextNBTEntry(char* nbtData,bool inList,enum nbtType listType) {
 
 char* findNBTEntry(char* nbtData,enum nbtType type,char* name) {
     char* buffer = malloc(1024);
-    int headerLen = makeNBTHeader(buffer,type,name,0,0,false,true);
+    int headerLen = makeNBTHeader(buffer,type,name,0,0,false,true)-buffer;
     bool done = false;
     int treeLevel = 0;
     while(!done) {
