@@ -58,12 +58,12 @@ void buildChunkArrays(char* inputBlockArray,char* inputDataArray, struct ChunkPo
                 }
                 int dataLightArrayIndex = infdevIndex>>1;
                 if(infdevIndex%2==0) {
-                    *(dataArray+dataLightArrayIndex) = dataValue<<4;
-                    *(skyLightArray+dataLightArrayIndex) = skyLightValue<<4;
+                    *(dataArray+dataLightArrayIndex) += dataValue<<4;
+                    *(skyLightArray+dataLightArrayIndex) += skyLightValue<<4;
                 }
                 else {
-                    *(dataArray+dataLightArrayIndex) += dataValue;
-                    *(skyLightArray+dataLightArrayIndex) += skyLightValue;                    
+                    *(dataArray+dataLightArrayIndex) = dataValue;
+                    *(skyLightArray+dataLightArrayIndex) = skyLightValue;                    
                 }
                 y-=1;
             }
