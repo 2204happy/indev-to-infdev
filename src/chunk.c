@@ -6,8 +6,20 @@
 #include <nbt.h>
 #include <util.h>
 #include <chunk.h>
+#include <tile-entities.h>
 
-void getChunkFilePath(struct ChunkPos chunkPos, char* worldName,char* filePathBuffer) {
+struct coordinates3D getCoordsInChunk(struct coordinates3D coords,struct coordinates2D chunkPos) {
+    coords.x-=chunkPos.x*16;
+    coords.z-=chunkPos.z*16;
+    return coords;
+}
+
+bool coordsInChunk(struct coordinates3D globalCoords,struct coordinates2D chunkPos) {
+    struct coordinates3D coords = getCoordsInChunk(globalCoords,chunkPos);
+    return coords.x>=0 && coords.x<16 && coords.z>=0 && coords.z<16;
+}
+
+void getChunkFilePath(struct coordinates2D chunkPos, char* worldName,char* filePathBuffer) {
     char dirName1[3] = "";
     char dirName2[3] = "";
     char dirPath1[64] = "";
@@ -23,7 +35,7 @@ void getChunkFilePath(struct ChunkPos chunkPos, char* worldName,char* filePathBu
     sprintf(filePathBuffer,"%s/%s/%s/c.%s.%s.dat",worldName,dirName1,dirName2,getb36(xpos,chunkPos.x),getb36(zpos,chunkPos.z));
 }
 
-void buildChunkArrays(char* inputBlockArray,char* inputDataArray, struct ChunkPos chunkPos, struct IndevWorldSize worldSize,char* blockArray,char* dataArray,char* skyLightArray, char* heightMap) {
+void buildChunkArrays(char* inputBlockArray,char* inputDataArray, struct coordinates2D chunkPos, struct coordinates3D worldSize,char* blockArray,char* dataArray,char* skyLightArray, char* heightMap) {
     int x = 0;
     while (x<16) {
         int z = 0;
@@ -73,7 +85,7 @@ void buildChunkArrays(char* inputBlockArray,char* inputDataArray, struct ChunkPo
     }
 }
 
-int makeChunk(char* buffer,char* inputBlockArray,char* inputDataArray, struct ChunkPos chunkPos, struct IndevWorldSize worldSize) {
+int makeChunk(char* buffer,char* inputBlockArray,char* inputDataArray, struct coordinates2D chunkPos, struct coordinates3D worldSize, char* tileEntities) {
     const int chunkBlockCount = 16*16*128;
     
     char* bufferStart = buffer;
@@ -105,7 +117,7 @@ int makeChunk(char* buffer,char* inputBlockArray,char* inputDataArray, struct Ch
     
     
     buffer=makeNBTListEntry(buffer,"Entities",0,COMPOUND,false);
-    buffer=makeNBTListEntry(buffer,"TileEntities",0,COMPOUND,false);
+    buffer = copyTileEntities(tileEntities, buffer, chunkPos);
     
     buffer=makeNBTEndEntry(buffer);
     buffer=makeNBTEndEntry(buffer);
@@ -113,7 +125,7 @@ int makeChunk(char* buffer,char* inputBlockArray,char* inputDataArray, struct Ch
     return buffer-bufferStart;
 } 
 
-void saveChunk(char* buffer, int size, char* worldName, struct ChunkPos chunkPos) {
+void saveChunk(char* buffer, int size, char* worldName, struct coordinates2D chunkPos) {
     char filePath[64] = "";
     getChunkFilePath(chunkPos,worldName,filePath);
     

@@ -13,25 +13,26 @@ int main() {
     gzFile f = gzopen("test.mclevel","rb");
     gzread(f,inputBuffer,8407005);
     gzclose(f);
-    char* MinecraftLevel = findNBTEntry(inputBuffer,COMPOUND,"MinecraftLevel");
-    char* Map = findNBTEntry(MinecraftLevel,COMPOUND,"Map");
-    char* Blocks = findNBTEntry(Map,BYTE_ARRAY,"Blocks");
-    char* Data = findNBTEntry(Map,BYTE_ARRAY,"Data");
+    char* MinecraftLevel = passNBTHeader(findNBTEntry(inputBuffer,COMPOUND,"MinecraftLevel"));
+    char* Map = passNBTHeader(findNBTEntry(MinecraftLevel,COMPOUND,"Map"));
+    char* Blocks = passNBTHeader(findNBTEntry(Map,BYTE_ARRAY,"Blocks"));
+    char* Data = passNBTHeader(findNBTEntry(Map,BYTE_ARRAY,"Data"));
+    char* TileEntities = passNBTHeader(findNBTEntry(MinecraftLevel,LIST,"TileEntities"));
     
     char worldName[] = "World1";
     
     char* outputBuffer = malloc(1024*1024);
     mkdirIfNotExists(worldName);
-    struct IndevWorldSize worldSize;
+    struct coordinates3D worldSize;
     worldSize.x = 256;
     worldSize.y = 64;
     worldSize.z = 256;
-    struct ChunkPos chunkPos;
+    struct coordinates2D chunkPos;
     chunkPos.x = 0;
     while(chunkPos.x*16<worldSize.x) {
         chunkPos.z = 0;
         while(chunkPos.z*16<worldSize.z) {
-            int size = makeChunk(outputBuffer,Blocks+4,Data+4,chunkPos,worldSize);
+            int size = makeChunk(outputBuffer,Blocks+4,Data+4,chunkPos,worldSize,TileEntities);
             saveChunk(outputBuffer,size,worldName,chunkPos);
             chunkPos.z+=1;
         }

@@ -31,6 +31,8 @@ char* skipNBTListEntry(char* nbtData);
 
 char* skipNBTCompoundEntry(char* nbtData);
 
+char* passNBTHeader(char* nbtData);
+
 char* getNextNBTEntry(char* nbtData,bool inList,enum nbtType listType);
 
 char* findNBTEntry(char* nbtData,enum nbtType type,char* name);

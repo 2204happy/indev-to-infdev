@@ -149,6 +149,16 @@ char* skipNBTCompoundEntry(char* nbtData) {
     return nbtData;
 }
 
+char* passNBTHeader(char* nbtData) {
+    enum nbtType type = (enum nbtType)(*nbtData);
+    nbtData++;
+    if(type!=END) {
+        int nameLen = flipShortEndian(*((short int*)nbtData));
+        nbtData+=2+nameLen;
+    }
+    return nbtData;
+}
+
 char* getNextNBTEntry(char* nbtData,bool inList,enum nbtType listType) {
     enum nbtType type;
     if(inList) {
@@ -156,11 +166,7 @@ char* getNextNBTEntry(char* nbtData,bool inList,enum nbtType listType) {
     }
     else {
         type = (enum nbtType)(*nbtData);
-        nbtData++;
-        if(type!=END) {
-            int nameLen = flipShortEndian(*((short int*)nbtData));
-            nbtData+=2+nameLen;
-        }
+        nbtData = passNBTHeader(nbtData);
     }
     int arrayLen;
     switch (type) {
@@ -211,18 +217,15 @@ char* getNextNBTEntry(char* nbtData,bool inList,enum nbtType listType) {
 }
 
 char* findNBTEntry(char* nbtData,enum nbtType type,char* name) {
-    char* buffer = malloc(1024);
+    char buffer[1024];
     int headerLen = makeNBTHeader(buffer,type,name,0,0,false,true)-buffer;
     bool done = false;
-    int treeLevel = 0;
     while(!done) {
         if(memcmp(buffer,nbtData,headerLen)==0) {
-            free(buffer);
-            return nbtData+headerLen;
+            return nbtData;
         }
         else {
             nbtData = getNextNBTEntry(nbtData,false,0);
         }
     }
-    free(buffer);
 }

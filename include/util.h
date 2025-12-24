@@ -19,13 +19,13 @@ enum nbtType {
     LONG_ARRAY = 12
 };
 
-struct IndevWorldSize {
+struct coordinates3D {
     int x;
     int y;
     int z;
 };
 
-struct ChunkPos {
+struct coordinates2D {
     int x;
     int z;
 };

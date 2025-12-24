@@ -1,9 +1,14 @@
 #include <util.h>
+#include <stdbool.h>
 
-void getChunkFilePath(struct ChunkPos chunkPos, char* worldName,char* filePathBuffer);
+struct coordinates3D getCoordsInChunk(struct coordinates3D globalCoords,struct coordinates2D chunkPos);
 
-void buildChunkBlockArray(char* inputBlockArray,char* inputDataArray, struct ChunkPos chunkPos, struct IndevWorldSize worldSize,char* blockArray,char* dataArray,char* skyLightArray, char* heightMap);
+bool coordsInChunk(struct coordinates3D coords,struct coordinates2D chunkPos);
 
-int makeChunk(char* buffer,char* inputBlockArray,char* inputDataArray, struct ChunkPos chunkPos, struct IndevWorldSize worldSize);
+void getChunkFilePath(struct coordinates2D chunkPos, char* worldName,char* filePathBuffer);
 
-void saveChunk(char* buffer, int size, char* worldName, struct ChunkPos chunkPos);
+void buildChunkBlockArray(char* inputBlockArray,char* inputDataArray, struct coordinates2D chunkPos, struct coordinates3D worldSize,char* blockArray,char* dataArray,char* skyLightArray, char* heightMap);
+
+int makeChunk(char* buffer,char* inputBlockArray,char* inputDataArray, struct coordinates2D chunkPos, struct coordinates3D worldSize, char* tileEntities);
+
+void saveChunk(char* buffer, int size, char* worldName, struct coordinates2D chunkPos);
