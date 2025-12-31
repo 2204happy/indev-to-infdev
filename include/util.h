@@ -30,6 +30,22 @@ struct coordinates2D {
     int z;
 };
 
+struct charArray {
+    char* array;
+    int size;
+};
+
+struct intArray {
+    int* array;
+    int size;
+};
+
+struct longArray {
+    long int* array;
+    int size;
+};
+
+
 #endif
 
 

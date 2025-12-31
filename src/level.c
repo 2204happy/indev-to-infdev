@@ -4,7 +4,61 @@
 
 #include <nbt.h>
 
-int makeLevelDat(char* buffer) {
+
+struct levelData {
+    struct coordinates3D dimensions;
+    struct coordinates3D spawn;
+    long int time;
+    char* playerEntry;
+    char* blockArray;
+    char* dataArray;
+    char* tileEntities;
+};
+
+char* getPlayerEntry(char* inputPtr) {
+    char* playerEntryPointer;
+    inputPtr++;
+    int numEntities = flipIntEndian(*((int*)inputPtr));
+    inputPtr+=4;
+    int i = 0;
+    bool found = false;
+    while (i<numEntities && !found) {
+        char* id = passNBTHeader(findNBTEntry(inputPtr,STRING,"id"));
+        short int strLen = flipShortEndian(*((short int*)id));
+        strLen = strLen>11 ? 11 : strLen;
+        id+=2;
+        if(memcmp(id,"LocalPlayer",strLen) == 0) {
+            playerEntryPointer = inputPtr;
+            found = true;
+        }
+        else {
+            inputPtr = getNextNBTEntry(inputPtr,true,COMPOUND);
+        }
+    }
+    return playerEntryPointer;
+}
+
+struct levelData getLevelData(char* inputBuffer) {
+    struct levelData;
+    char* MinecraftLevel = passNBTHeader(findNBTEntry(inputBuffer,COMPOUND,"MinecraftLevel"));
+    char Environment = passNBTHeader(findNBTEntry(MinecraftLevel,COMPOUND,"Environment"));
+    
+    short int TimeOfDay = flipShortEndian(*((short int*)passNBTHeader(findNBTEntry(Environment,SHORT,"TimeOfDay"))));
+    
+    levelData.time = TimeOfDay;
+    
+    char* Entities = passNBTHeader(findNBTEntry(MinecraftLevel,LIST,"Entities"));
+    
+    levelData.playerEntry = getPlayerEntry(Entities);
+    
+    char* Map = passNBTHeader(findNBTEntry(MinecraftLevel,COMPOUND,"Map"));
+    levelData.blockArray = passNBTHeader(findNBTEntry(Map,BYTE_ARRAY,"Blocks"))+4;
+    levelData.dataArray = passNBTHeader(findNBTEntry(Map,BYTE_ARRAY,"Data"))+4;
+    levelData.tileEntities = passNBTHeader(findNBTEntry(MinecraftLevel,LIST,"TileEntities"));
+    
+}
+
+int makeLevelDat(char* buffer,struct levelData data) {
     char* bufferStart = buffer;
     
     buffer = makeNBTCompoundEntry(buffer,"",false);
@@ -16,45 +70,28 @@ int makeLevelDat(char* buffer) {
     
     buffer = makeNBTLongEntry(buffer,"RandomSeed", 0x123456789abcdef0, false);
 
-    buffer = makeNBTIntEntry(buffer,"SpawnX", 32, false);
+    buffer = makeNBTIntEntry(buffer,"SpawnX", data.spawn.x, false);
     
-    buffer = makeNBTIntEntry(buffer,"SpawnY", 32, false);
+    buffer = makeNBTIntEntry(buffer,"SpawnY", data.spawn.y, false);
     
-    buffer = makeNBTIntEntry(buffer,"SpawnZ", 32, false);
+    buffer = makeNBTIntEntry(buffer,"SpawnZ", data.spawn.z, false);
     
-    buffer = makeNBTLongEntry(buffer,"Time", 0, false);
+    buffer = makeNBTLongEntry(buffer,"Time", data.time, false);
+    
+    char* playerEnd = getNextNBTEntry(levelData.playerEntry,true,COMPOUND);
+    char* playerID = findNBTEntry(levelData.playerEntry,STRING,"id");
+    
 
     buffer = makeNBTCompoundEntry(buffer,"Player",false);
-
-    buffer = makeNBTListEntry(buffer,"Pos", 3, DOUBLE, false);
-    buffer = makeNBTDoubleEntry(buffer,"",0,true);
-    buffer = makeNBTDoubleEntry(buffer,"",64,true);
-    buffer = makeNBTDoubleEntry(buffer,"",0,true);
     
-    buffer = makeNBTListEntry(buffer,"Rotation", 2, FLOAT, false);
-    buffer = makeNBTFloatEntry(buffer,"",0,true);
-    buffer = makeNBTFloatEntry(buffer,"",0,true);
+    int copyLen = playerID-levelData.playerEntry;
+    memcpy(buffer,levelData.playerEntry,copyLen);
+    buffer+=copyLen;
+    char* inPtr = getNextNBTEntry(playerID,false,0);
     
-    buffer = makeNBTListEntry(buffer,"Motion", 3, DOUBLE, false);
-    buffer = makeNBTDoubleEntry(buffer,"",0,true);
-    buffer = makeNBTDoubleEntry(buffer,"",64,true);
-    buffer = makeNBTDoubleEntry(buffer,"",0,true);
-    
-    buffer = makeNBTByteEntry(buffer,"OnGround", 0, false);
-
-    buffer = makeNBTFloatEntry(buffer,"FallDistance",0,false);
-    
-    buffer = makeNBTShortEntry(buffer,"Health", 20, false);
-  
-    buffer = makeNBTShortEntry(buffer,"AttackTime", 0, false);
-    buffer = makeNBTShortEntry(buffer,"HurtTime", 0, false);
-    buffer = makeNBTShortEntry(buffer,"DeathTime", 0, false);
-    buffer = makeNBTShortEntry(buffer,"Air", 300, false);
-    buffer = makeNBTShortEntry(buffer,"Fire", -20, false);
-
-    buffer = makeNBTListEntry(buffer,"Inventory", 0, COMPOUND, false);
-
-    buffer = makeNBTEndEntry(buffer);
+    copyLen = playerEnd-inPtr;
+    memcpy(buffer,inPtr,copyLen);
+    buffer+=copyLen;
     
     buffer = makeNBTEndEntry(buffer);
     buffer = makeNBTEndEntry(buffer);

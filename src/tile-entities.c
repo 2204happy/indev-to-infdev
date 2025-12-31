@@ -17,7 +17,7 @@ char* addTileEntityToChunk(char* outputBuffer,char* nbtData,struct coordinates2D
     int posValue = flipIntEndian(*((int *)passNBTHeader(pos)));
     struct coordinates3D coords = getTileEntityCoords(posValue);    
     if (coordsInChunk(coords,chunkPos)) {
-        char* end = findNBTEntry(nbtData,END,"");
+        char* end = getNextNBTEntry(nbtData,true,COMPOUND);
         memcpy(outputBuffer,nbtData,pos-nbtData);
         outputBuffer+=pos-nbtData;
         

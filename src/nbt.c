@@ -129,6 +129,107 @@ char* makeNBTLongArrayEntry(char* buffer,char* name,long int* payload,int plSize
     return buffer;
 }
 
+void readNBTNumEntry(char* buffer,bool noHeader,void* outBuffer,enum nbtType type) {
+    if(!noHeader) {
+        buffer = passNBTHeader(buffer);
+    }
+    switch (type) {
+        case BYTE:
+            *((char*)outBuffer) = *buffer;
+            break;
+        case SHORT:
+            *((short int*)outBuffer) = flipShortEndian(*((short int*)buffer));
+            break;
+        case INT:
+        case FLOAT:
+            *((int*)outBuffer) = flipIntEndian(*((int*)buffer));
+            break;
+        case LONG:
+        case DOUBLE:
+            *((long int*)outBuffer) = flipLongEndian(*((long int*)buffer));
+            break;
+            
+    }
+}
+
+char readNBTByteEntry(char* buffer,bool noHeader) {
+    char payload;
+    readNBTNumEntry(buffer,noHeader,payload,CHAR);
+    return payload;
+}
+
+
+short int readNBTShortEntry(char* buffer,bool noHeader) {
+    short int payload;
+    readNBTNumEntry(buffer,noHeader,payload,SHORT);
+    return payload;
+}
+
+int readNBTIntEntry(char* buffer,bool noHeader) {
+    int payload;
+    readNBTNumEntry(buffer,noHeader,payload,INT);
+    return payload;
+}
+
+long int readNBTLongEntry(char* buffer,bool noHeader) {
+    long int payload;
+    readNBTNumEntry(buffer,noHeader,payload,LONG);
+    return payload;
+}
+
+float readNBTFloatEntry(char* buffer,bool noHeader) {
+    float payload;
+    readNBTNumEntry(buffer,noHeader,payload,FLOAT);
+    return payload;
+}
+
+double readNBTDoubleEntry(char* buffer,bool noHeader) {
+    double payload;
+    readNBTNumEntry(buffer,noHeader,payload,DOUBLE);
+    return payload;
+}
+
+
+struct charArray readNBTArrayEntry(char* buffer,bool noHeader,bool stringEntry) {
+    if(!noHeader) {
+        buffer = passNBTHeader(buffer);
+    }
+    struct charArray payload;
+    if(!stringEntry) {
+        payload.size = flipIntEndian(*((int*)buffer));
+        buffer+=4;
+    }
+    else {
+        payload.size = flipShortEndian(*((short int*)buffer));
+        buffer+=2;
+    }
+    payload.array = buffer;
+    return payload;
+}
+
+struct charArray readNBTByteArrayEntry(char* buffer,bool noHeader) {
+    return readNBTArrayEntry(buffer,noHeader,false);
+}
+
+struct charArray readNBTStringEntry(char* buffer,bool noHeader) {
+    return readNBTArrayEntry(buffer,noHeader,true);
+}
+
+struct charArray readNBTIntArrayEntry(char* buffer,bool noHeader) {
+    struct charArray ca = readNBTArrayEntry(buffer,noHeader,false);
+    struct intArray payload;
+    payload.array = (int*)ca.array;
+    payload.size = ca.size;
+}
+
+struct charArray readNBTLongArrayEntry(char* buffer,bool noHeader) {
+    struct charArray ca = readNBTArrayEntry(buffer,noHeader,false);
+    struct longArray payload;
+    payload.array = (long int*)ca.array;
+    payload.size = ca.size;
+}
+
+
 char* skipNBTListEntry(char* nbtData) {
     enum nbtType listType = (enum nbtType)(*nbtData);
     nbtData++;
