@@ -25,6 +25,28 @@ void mkdirIfNotExists(char* dir) {
     }
 }
 
+void flipEndian(void* n,void* outBuffer,enum nbtType type) {
+    switch (type) {
+        case BYTE:
+        case BYTE_ARRAY:
+        case STRING:
+            *((char*)outBuffer) = *((char*)n);
+            break;
+        case SHORT:
+            *((short int*)outBuffer) = flipShortEndian(*((short int*)n));
+            break;
+        case INT;
+        case FLOAT;
+        case INT_ARRAY;
+            *((int*)outBuffer) = flipIntEndian(*((int*)n));
+            break;
+        case LONG;
+        case DOUBLE;
+        case LONG_ARRAY;
+            *((long int*)outBuffer) = flipIntEndian(*((long int*)n));
+            break;        
+    }
+}
 
 int flipIntEndian(int n) {
     return (n&0x000000ff)<<24|
