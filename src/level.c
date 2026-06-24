@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <zlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <nbt.h>
 
@@ -39,22 +40,22 @@ char* getPlayerEntry(char* inputPtr) {
 }
 
 struct levelData getLevelData(char* inputBuffer) {
-    struct levelData;
+    struct levelData data;
     char* MinecraftLevel = passNBTHeader(findNBTEntry(inputBuffer,COMPOUND,"MinecraftLevel"));
-    char Environment = passNBTHeader(findNBTEntry(MinecraftLevel,COMPOUND,"Environment"));
+    char* Environment = passNBTHeader(findNBTEntry(MinecraftLevel,COMPOUND,"Environment"));
     
     short int TimeOfDay = flipShortEndian(*((short int*)passNBTHeader(findNBTEntry(Environment,SHORT,"TimeOfDay"))));
     
-    levelData.time = TimeOfDay;
+    data.time = TimeOfDay;
     
     char* Entities = passNBTHeader(findNBTEntry(MinecraftLevel,LIST,"Entities"));
     
-    levelData.playerEntry = getPlayerEntry(Entities);
+    data.playerEntry = getPlayerEntry(Entities);
     
     char* Map = passNBTHeader(findNBTEntry(MinecraftLevel,COMPOUND,"Map"));
-    levelData.blockArray = passNBTHeader(findNBTEntry(Map,BYTE_ARRAY,"Blocks"))+4;
-    levelData.dataArray = passNBTHeader(findNBTEntry(Map,BYTE_ARRAY,"Data"))+4;
-    levelData.tileEntities = passNBTHeader(findNBTEntry(MinecraftLevel,LIST,"TileEntities"));
+    data.blockArray = passNBTHeader(findNBTEntry(Map,BYTE_ARRAY,"Blocks"))+4;
+    data.dataArray = passNBTHeader(findNBTEntry(Map,BYTE_ARRAY,"Data"))+4;
+    data.tileEntities = passNBTHeader(findNBTEntry(MinecraftLevel,LIST,"TileEntities"));
     
 }
 
@@ -78,14 +79,14 @@ int makeLevelDat(char* buffer,struct levelData data) {
     
     buffer = makeNBTLongEntry(buffer,"Time", data.time, false);
     
-    char* playerEnd = getNextNBTEntry(levelData.playerEntry,true,COMPOUND);
-    char* playerID = findNBTEntry(levelData.playerEntry,STRING,"id");
+    char* playerEnd = getNextNBTEntry(data.playerEntry,true,COMPOUND);
+    char* playerID = findNBTEntry(data.playerEntry,STRING,"id");
     
 
     buffer = makeNBTCompoundEntry(buffer,"Player",false);
     
-    int copyLen = playerID-levelData.playerEntry;
-    memcpy(buffer,levelData.playerEntry,copyLen);
+    int copyLen = playerID-data.playerEntry;
+    memcpy(buffer,data.playerEntry,copyLen);
     buffer+=copyLen;
     char* inPtr = getNextNBTEntry(playerID,false,0);
     

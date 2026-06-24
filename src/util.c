@@ -35,14 +35,14 @@ void flipEndian(void* n,void* outBuffer,enum nbtType type) {
         case SHORT:
             *((short int*)outBuffer) = flipShortEndian(*((short int*)n));
             break;
-        case INT;
-        case FLOAT;
-        case INT_ARRAY;
+        case INT:
+        case FLOAT:
+        case INT_ARRAY:
             *((int*)outBuffer) = flipIntEndian(*((int*)n));
             break;
-        case LONG;
-        case DOUBLE;
-        case LONG_ARRAY;
+        case LONG:
+        case DOUBLE:
+        case LONG_ARRAY:
             *((long int*)outBuffer) = flipIntEndian(*((long int*)n));
             break;        
     }

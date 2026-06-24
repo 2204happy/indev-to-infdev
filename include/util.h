@@ -48,6 +48,7 @@ struct longArray {
 
 #endif
 
+void flipEndian(void* n,void* outBuffer,enum nbtType type);
 
 char* getb36(char* buffer, int n);
 

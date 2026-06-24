@@ -167,38 +167,38 @@ void readNBTNumEntry(char* buffer,bool noHeader,void* outBuffer,enum nbtType typ
 
 char readNBTByteEntry(char* buffer,bool noHeader) {
     char payload;
-    readNBTNumEntry(buffer,noHeader,payload,CHAR);
+    readNBTNumEntry(buffer,noHeader,&payload,BYTE);
     return payload;
 }
 
 
 short int readNBTShortEntry(char* buffer,bool noHeader) {
     short int payload;
-    readNBTNumEntry(buffer,noHeader,payload,SHORT);
+    readNBTNumEntry(buffer,noHeader,&payload,SHORT);
     return payload;
 }
 
 int readNBTIntEntry(char* buffer,bool noHeader) {
     int payload;
-    readNBTNumEntry(buffer,noHeader,payload,INT);
+    readNBTNumEntry(buffer,noHeader,&payload,INT);
     return payload;
 }
 
 long int readNBTLongEntry(char* buffer,bool noHeader) {
     long int payload;
-    readNBTNumEntry(buffer,noHeader,payload,LONG);
+    readNBTNumEntry(buffer,noHeader,&payload,LONG);
     return payload;
 }
 
 float readNBTFloatEntry(char* buffer,bool noHeader) {
     float payload;
-    readNBTNumEntry(buffer,noHeader,payload,FLOAT);
+    readNBTNumEntry(buffer,noHeader,&payload,FLOAT);
     return payload;
 }
 
 double readNBTDoubleEntry(char* buffer,bool noHeader) {
     double payload;
-    readNBTNumEntry(buffer,noHeader,payload,DOUBLE);
+    readNBTNumEntry(buffer,noHeader,&payload,DOUBLE);
     return payload;
 }
 
