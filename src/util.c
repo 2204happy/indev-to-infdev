@@ -43,7 +43,7 @@ void flipEndian(void* n,void* outBuffer,enum nbtType type) {
         case LONG:
         case DOUBLE:
         case LONG_ARRAY:
-            *((long int*)outBuffer) = flipIntEndian(*((long int*)n));
+            *((long int*)outBuffer) = flipLongEndian(*((long int*)n));
             break;        
     }
 }

@@ -89,19 +89,24 @@ int makeChunk(char* buffer,char* inputBlockArray,char* inputDataArray, struct co
     const int chunkBlockCount = 16*16*128;
     
     char* bufferStart = buffer;
-    
+
     buffer=makeNBTCompoundEntry(buffer,"",false);
     buffer=makeNBTCompoundEntry(buffer,"Level",false);
+
     buffer=makeNBTIntEntry(buffer,"xPos",chunkPos.x,false);
+
+
     buffer=makeNBTIntEntry(buffer,"zPos",chunkPos.z,false);
     //chunkSize+=makeNBTLongEntry(buffer,"LastUpdate",0,false);
-    
+
     
     char blockArray[chunkBlockCount];
     char dataArray[chunkBlockCount/2];
     char skyLightArray[chunkBlockCount/2];
     char heightMap[256];
     
+
+
     buildChunkArrays(inputBlockArray,inputDataArray,chunkPos,worldSize,blockArray,dataArray,skyLightArray,heightMap);
     
     buffer=makeNBTByteArrayEntry(buffer,"Blocks",blockArray,chunkBlockCount,false);

@@ -78,8 +78,10 @@ int makeLevelDat(char* buffer,struct levelData data) {
     buffer = makeNBTIntEntry(buffer,"SpawnZ", data.spawn.z, false);
     
     buffer = makeNBTLongEntry(buffer,"Time", data.time, false);
-    
+
     char* playerEnd = getNextNBTEntry(data.playerEntry,true,COMPOUND);
+    return buffer-bufferStart;
+
     char* playerID = findNBTEntry(data.playerEntry,STRING,"id");
     
 

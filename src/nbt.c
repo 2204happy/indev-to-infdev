@@ -78,9 +78,10 @@ char* makeNBTNumEntry(char* buffer,char* name, void* payload, bool inList,enum n
         case LONG:
         case DOUBLE:
             *((long int*)buffer) = flipLongEndian(*((long int*)payload));
-            buffer+=4;
+            buffer+=8;
             break;
     }
+    return buffer;
 }
 
 char* makeNBTByteEntry(char* buffer,char* name, char payload, bool inList) {
@@ -162,7 +163,6 @@ void readNBTNumEntry(char* buffer,bool noHeader,void* outBuffer,enum nbtType typ
         buffer = passNBTHeader(buffer);
     }
     flipEndian(buffer,outBuffer,type);
-    outBuffer+=typeLength[type];
 }
 
 char readNBTByteEntry(char* buffer,bool noHeader) {
